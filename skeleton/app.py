@@ -6,7 +6,7 @@ import plotly.express as px
 from dash import Dash, html, dcc
 
 url = 'https://api.congress.gov/v3/member'
-param = {'api_key': 'wCZKBqTswprG2UM8ntlMC2x52KgRoZQfB3Q05aoo'}
+param = {'api_key': 'DEMO_KEY'}
 
 r = requests.get(url, params = param)
 
