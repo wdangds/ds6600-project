@@ -6,7 +6,7 @@ import plotly.express as px
 from dash import Dash, html, dcc
 
 url = 'https://api.congress.gov/v3/member'
-param = {'api_key': 'DEMO_KEY'}
+param = {'api_key': 'wCZKBqTswprG2UM8ntlMC2x52KgRoZQfB3Q05aoo'}
 
 r = requests.get(url, params = param)
 
@@ -28,4 +28,4 @@ app.layout = html.Div(
 )
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port='8050')
