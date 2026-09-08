@@ -3,25 +3,16 @@
 
 services:
   app:
-    build: .
-    env_file: .env
+    image: ds6600project_image
     ports:
       - "8050:8050"
     volumes:
-      - .:/app
-    depends_on:
-      - db
+      - .:/ds6600-project
 
-  db:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: project
-    ports:
+  postgres:
+    image: postgres:latest
+    ports: 
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
+      
+    
