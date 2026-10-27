@@ -340,3 +340,91 @@ class contrans:
         if failed:
             print(f'{len(failed)} FEC IDs failed; rerun to retry them: {failed}')
         return schedule_e
+
+    # Organize raw data into processed (3NF) data
+    def make_members(self):
+        bioinfo = pd.read_parquet('data/raw/bioinfo.parquet')
+        ideology = pd.read_parquet('data/raw/ideology.parquet')
+        bioinfo.columns = [x.replace(' ', '_').lower()  for x in bioinfo.columns]
+        ideology = ideology[['icpsr', 'bioguide_id', 'fec_id', 'left_right_ideology']]
+        ideology = ideology.drop(['fec_id'], axis=1)
+        ideology = ideology.groupby(['bioguide_id']).agg({'left_right_ideology': 'mean'}).reset_index()
+        members = pd.merge(bioinfo, ideology,
+                   on = 'bioguide_id',
+                   how = 'outer',
+                   validate = 'one_to_one')
+        members.to_csv("data/processed/members.csv", index=False)
+
+    def make_crosswalk(self):
+        ideology = pd.read_parquet('data/raw/ideology.parquet')
+        fec = ideology.explode('fec_id')
+        fec = fec.drop(['left_right_ideology'], axis=1)
+        fec.to_csv("data/processed/crosswalk.csv", index=False)
+
+    def make_terms(self):
+        terms = pd.read_parquet('data/raw/terms.parquet')
+        terms = terms.drop(['startYear', 'endYear'], axis=1)
+        terms.columns = [x.lower() for x in terms.columns]
+        terms.to_csv("data/processed/terms.csv", index=False)
+
+    def make_bills(self):
+        bill_summaries_119 = pd.read_parquet('data/raw/bill_summaries_119.parquet')
+        sponsored_legislation = pd.read_parquet('data/raw/sponsored_legislation.parquet')
+        sponsored_legislation = sponsored_legislation.drop_duplicates()
+        sponsored_legislation = sponsored_legislation[['bioguide_id', 'url']]
+        bills = pd.merge(bill_summaries_119, sponsored_legislation,
+                 left_on = ['bill.url'], right_on=['url'],
+                 how = 'outer',
+                 indicator = 'matched',
+                 validate = 'many_to_one')
+        bills = bills.query("matched == 'both'")
+        bills = bills.drop(['matched', 'url'], axis=1)
+        bills.columns = [x.lower().replace('.', '_') for x in bills.columns]
+        bills.to_csv("data/processed/bills.csv", index=False)
+
+    def make_expenditures(self):
+        schedule_e_2026 = pd.read_parquet('data/raw/schedule_e_2026.parquet')
+        expenditures = schedule_e_2026[['fec_id', 'transaction_id', 'expenditure_amount', 'committee.name', 
+                                        'committee.committee_type_full', 'support_oppose_indicator']]
+        expenditures = expenditures.rename({'committee.name': 'committee_name',
+                                            'committee.committee_type_full': 'committee_type_full'}, 
+                                            axis=1)
+        expenditures.to_csv("data/processed/expenditures.csv", index=False)
+
+    def make_others(self):
+        committee_members = pd.read_parquet('data/raw/committee_members.parquet')
+        committees = pd.read_parquet('data/raw/committees.parquet')
+        vote_compare = pd.read_parquet('data/raw/vote_compare.parquet')
+        committee_members.to_csv('data/processed/committee_members.csv', index=False)
+        committees.to_csv('data/processed/committees.csv', index=False)
+        vote_compare.to_csv('data/processed/vote_compare.csv', index=False)
+
+    # Document data
+    def make_er_schema(self):
+        pass 
+
+    def pandas_df_to_dbml(self, df: pd.DataFrame, table_name: str) -> str:
+        """
+        Converts a pandas DataFrame to a DBML string.
+        Args:
+            df: The pandas DataFrame to convert.
+            table_name: The name of the table in the DBML schema.
+        Returns:
+            A DBML string representing the DataFrame schema.
+        """
+        dbml_string = f"Table {table_name} {{\n"
+        for column_name, column_type in df.dtypes.items():
+            dbml_type = self.map_pandas_dtype_to_dbml_type(column_type)
+            dbml_string += f"  {column_name} {dbml_type}\n"
+        dbml_string += "}\n"
+        return dbml_string
+    def map_pandas_dtype_to_dbml_type(self, dtype) -> str:
+        """Maps a pandas dtype to a DBML type."""
+        dtype_name = str(dtype)
+        if "int" in dtype_name:
+            return "int"
+        if "float" in dtype_name:
+            return "float"
+        if "datetime" in dtype_name:
+            return "datetime"
+        return "varchar"
