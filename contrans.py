@@ -358,7 +358,7 @@ class contrans:
     def make_crosswalk(self):
         ideology = pd.read_parquet('data/raw/ideology.parquet')
         fec = ideology.explode('fec_id')
-        fec = fec.drop(['left_right_ideology'], axis=1)
+        fec = fec[['icpsr','bioguide_id','fec_id']]
         fec.to_csv("data/processed/crosswalk.csv", index=False)
 
     def make_terms(self):
@@ -400,15 +400,14 @@ class contrans:
         vote_compare.to_csv('data/processed/vote_compare.csv', index=False)
 
     # Document data
-    def make_er_schema(self):
-        pass 
-
     def pandas_df_to_dbml(self, df: pd.DataFrame, table_name: str) -> str:
         """
         Converts a pandas DataFrame to a DBML string.
+
         Args:
             df: The pandas DataFrame to convert.
             table_name: The name of the table in the DBML schema.
+
         Returns:
             A DBML string representing the DataFrame schema.
         """
@@ -418,6 +417,7 @@ class contrans:
             dbml_string += f"  {column_name} {dbml_type}\n"
         dbml_string += "}\n"
         return dbml_string
+
     def map_pandas_dtype_to_dbml_type(self, dtype) -> str:
         """Maps a pandas dtype to a DBML type."""
         dtype_name = str(dtype)

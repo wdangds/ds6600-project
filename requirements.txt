@@ -1,9 +1,6 @@
-# Pin your versions. "pandas" installs whatever is current the day
-# someone builds this; "pandas==2.2.3" installs what you tested against.
-# Get exact versions from your environment with: pip freeze
-
-pandas==3.0.5
+pandas==3.0.0
 requests==2.34.2
 numpy==2.5.2
 plotly==7.0.0
 dash==4.4.1
+

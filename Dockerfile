@@ -6,9 +6,8 @@ COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
 
-WORKDIR /ds6600-project 
+WORKDIR /contrans2026
 
-EXPOSE 8050 
+EXPOSE 8050
 
 CMD ["python", "skeleton/app.py"]
-
